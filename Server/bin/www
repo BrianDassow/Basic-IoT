@@ -46,8 +46,20 @@ io.on('connection', function(client){
         io.emit("addTempData", temp, time);
     });
 
+    client.on('humDataFromPi', function(hum, time) {
+        io.emit("addHumData", hum, time);
+    });
+
     client.on('ramDataFromPi', function(ramUsage, time) {
         io.emit("addRamData", ramUsage, time);
+    });
+
+    client.on('powerDataFromPi', function(power, time) {
+        io.emit("addPowerData", power, time);
+    });
+
+    client.on('changeTimeInterval', function(time) {
+        io.emit("changePIInterval", time);
     });
 
     client.on('disconnect', function(){});

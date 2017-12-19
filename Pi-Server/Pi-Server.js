@@ -1,54 +1,45 @@
-var socketClient = require('socket.io-client')('http://127.0.0.1:3000');
+var socketClient = require('socket.io-client')('http://24.183.22.39:3000');
 var os = require('os');
+var timeInterval = 1000;
 
-
-
-function sendTempData() {
-	//console.log(os.cpus());
-	//console.log(os.totalmem());
-	//console.log(os.freemem())
-	//console.log((os.freemem()/os.totalmem())*100)
+function sendAllData() {
 	var dateFormat = require('dateformat');
     var now = new Date();
     var nowFormatted = dateFormat(now, "hh:MM:ss");
-    temp = 30 + Math.random()*(.5);
-	socketClient.emit("tempDataFromPi", temp, nowFormatted);
-}
-
-function sendRamUsage() {
-	var dateFormat = require('dateformat');
-    var now = new Date();
-    var nowFormatted = dateFormat(now, "hh:MM:ss");
+	var temp = 30 + Math.random()*(.1);
+	socketClient.emit("tempDataFromPi", temp.toFixed(2), nowFormatted);
+	
+	var hum = 70 + Math.random()*(.1);
+	socketClient.emit("humDataFromPi", hum.toFixed(2), nowFormatted);
+	
 	var ramUsage = Math.abs(1 - (os.freemem()/os.totalmem()))*100;
-	socketClient.emit("ramDataFromPi", ramUsage, nowFormatted);
+	socketClient.emit("ramDataFromPi", ramUsage.toFixed(2), nowFormatted);
+	
+    var power = ramUsage/100*(5) + Math.random()*(.3);
+	socketClient.emit("powerDataFromPi", power.toFixed(2), nowFormatted);
 }
-
-function sendCPUUsage() {
-	console.log(os.cpus());
-	var dateFormat = require('dateformat');
-    var now = new Date();
-    var nowFormatted = dateFormat(now, "hh:MM:ss");
-	var cpus = os.cpus();
-	cpus.forEach(function(cpu) {
-		console.log(cpu);
-	});
-	//socketClient.emit("ramDataFromPi", ramUsage, nowFormatted);
-}
-sendCPUUsage();
-
-
-// Send current time every 10 secs
-setInterval(sendTempData, 1000);
-setInterval(sendRamUsage, 1000);
 
 // Emit welcome message on connection
 socketClient.on('connect', function(socket) {
 	console.log("Connected to main server.");
 });
 
+socketClient.on('changePIInterval', function(interval) {
+	timeInterval = interval*1000;
+});
+
 // Emit welcome message on connection
 socketClient.on('disconnect', function(socket) {
 	console.log("Disconnected from main server.");
 });
+
+setTimeout(function run() {
+	sendAllData();
+	setTimeout(run, timeInterval);
+}, timeInterval);
+
+function myStopFunction() {
+    clearTimeout(myVar);
+}
 
 console.log("Pi Server Listening.");
